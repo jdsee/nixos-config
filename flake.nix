@@ -16,7 +16,7 @@
 
   };
 
-  outputs = { self, nixpkgs, home-manager, neovim-nightly-overlay } @inputs:
+  outputs = inputs @ { self, nixpkgs, home-manager, neovim-nightly-overlay }:
     let
       user = "jdsee";
     in
@@ -29,3 +29,4 @@
       );
     };
 }
+

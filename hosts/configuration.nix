@@ -28,11 +28,15 @@
   i18n.defaultLocale = "en_US.UTF-8";
   console = {
     font = "Lat2-Terminus16";
-    # keyMap = "us";
-    useXkbConfig = true; # use xkbOptions in tty.
+    useXkbConfig = true;
   };
 
-  security.polkit.enable = true; # required to setup sway with HomeManager
+  security = {
+    polkit.enable = true; # required to setup sway with HomeManager
+    pam.services.swaylock = {
+      text = "auth include login";
+    };
+  };
 
   services = {
     xserver = {
@@ -74,6 +78,7 @@
     registry.nixpkgs.flake = inputs.nixpkgs;
     extraOptions = ''
       experimental-features = nix-command flakes
+      warn-dirty = false
     '';
   };
 
@@ -84,7 +89,23 @@
     };
   };
 
-  hardware.pulseaudio.enable = true;
+  hardware = {
+    pulseaudio.enable = true;
+    opengl = {
+      enable = true;
+      driSupport = true;
+    };
+  };
+
+  xdg = {
+    portal = {
+      enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-wlr
+        xdg-desktop-portal-gtk
+      ];
+    };
+  };
 
   users.users.${user} = {
     isNormalUser = true;
@@ -107,13 +128,29 @@
       VISUAL = "nvim";
     };
     systemPackages = with pkgs; [
-      vim
       neovim
       tmux
       git
       curl
       wget
-      httpie
+
+      ((vim_configurable.override {  }).customize {
+       name = "vim";
+       vimrcConfig = {
+         packages.myplugins = with pkgs.vimPlugins; {
+           start = [ vim-nix vim-lastplace ];
+           opt = [];
+         };
+         customRC = ''
+           set nu
+           set relativenu
+           set incsearch
+           set nocompatible
+           backspace=indent,eol,start
+           syntax on
+         '';
+       };
+      })
     ];
   };
 

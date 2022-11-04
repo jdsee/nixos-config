@@ -3,14 +3,10 @@
 {
   programs.home-manager.enable = true;
 
-    imports = [
-      ./config/zsh.nix
-    ];
-
   home = {
-
     username = "${user}";
     homeDirectory = "/home/${user}";
+
     stateVersion = "22.05";
   
     packages = with pkgs; [
@@ -18,7 +14,6 @@
       signal-desktop
 
       bat
-      docker
       exa
       file
       fortune
@@ -27,10 +22,8 @@
       gnupg
       htop-vim
       httpie
-      jq
-      tmuxinator
       unzip
-      ripgrep
+      docker
 
       gammastep
       grim
@@ -79,51 +72,37 @@
     enableAutosuggestions = true;
     zplug = {
       enable = true;
-      plugins = [
-      { name = "sindresorhus/pure"; }
-      { name = "zsh-users/zsh-autosuggestions"; }
-      { name = "zsh-users/zsh-syntax-highlighting"; }
-      ];
+      plugins = {
+        # { name = "zsh-users/zsh-autosuggestions"; }
+        { name = "zsh-users/zsh-syntax-highlighting"; }
+        { name = "ajeetdsouza/zoxide"; }
+      };
     };
-    sessionVariables = {
-      GPG_TTY = "$(tty)";
-      MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-      PURE_NODE_ENABLED = 0;
-      PURE_CMD_MAX_EXEC_TIME = 0;
-      FZF_TMUX = 0;
-      FZF_CTRL_T_OPTS = "--preview '(highlight -O ansi -l {} 2> /dev/null || cat {} || tree -C {}) 2> /dev/null | head -200'";
-      FZF_CTRL_R_OPTS = "--preview 'echo {}' --preview-window down:3:hidden:wrap --bind '?:toggle-preview'";
-      FZF_ALT_C_OPTS = "--preview 'tree -C {} | head -200'";
+    initExtra = {
+
     };
-    interactiveShellInit = ''
-      eval "$(ssh-agent)" >/dev/null
-      eval "$( pyenv init - --no-rehash )"
-      eval "$( pyenv virtualenv-init - )"
-      eval "$( pip completion --zsh )"
-      '';
     shellAliases = {
       vi = "nvim";
       vind = "nvim -c 'Telescope zoxide list'";
 
-      ls = "exa";
       ll = "ls -Alh";
       la = "ls -A";
       ld = "ls -Ad";
       tree = "la --tree";
       trees = "tree --depth 4";
 
-      ".." = "cd ../";
-      "..." = "cd ../../";
-      "...." = "cd ../../../";
-      "....." = "cd ../../../../";
-      "......" = "cd ../../../../../";
+      .. = "cd ../";
+      ... = "cd ../../";
+      .... = "cd ../../../";
+      ..... = "cd ../../../../";
+      ...... = "cd ../../../../../";
 
       lg = "lazygit";
       rmgi = "git rm -r --cached . && git add . && git status";
       conflicts = "grep -lr '<<<<<<<' .";
 
       _ = "sudo";
-      cat = "bat -p";
+      cat = "${bat}/bin/bat -p";
       grep = "grep --color";
       hg = "history 0 | grep";
       mycolors = "msgcat --color=test";
@@ -131,15 +110,15 @@
       diff = "colordiff";
       clip = "xclip -sel clip";
 
-      "src.zsh" = "source $HOME/.zshrc";
-      "src.aliases" = "source $HOME/.config/zsh/aliases.zsh";
+      src.zsh = "source $HOME/.zshrc";
+      src.aliases = "source $HOME/.config/zsh/aliases.zsh";
 
-      "set.zsh" = "nvim $HOME/.zshrc";
-      "set.env" = "nvim $HOME/.zshenv";
-      "set.aliases" = "nvim $HOME/.config/zsh/aliases.zsh";
-      "set.functions" = "nvim $HOME/.config/zsh/functions.zsh";
-      "set.completion" = "nvim $HOME/.config/zsh/completion.zsh";
-      "set.nvim" = "nvim $HOME/.config/nvim/init.lua";
+      set.zsh = "nvim $HOME/.zshrc";
+      set.env = "nvim $HOME/.zshenv";
+      set.aliases = "nvim $HOME/.config/zsh/aliases.zsh";
+      set.functions = "nvim $HOME/.config/zsh/functions.zsh";
+      set.completion = "nvim $HOME/.config/zsh/completion.zsh";
+      set.nvim = "nvim $HOME/.config/nvim/init.lua";
 
       tx = "tmuxinator";
       mux = "tx me";
@@ -147,11 +126,7 @@
       update = "sudo nixos-rebuild switch --flake .#jdsee";
     };
     history = {
-      size = 100000;
-      save = 1000000;
-      share = true;
-      expireDuplicatesFirst = true;
-      ignoreSpace = true;
+      size = 10000;
     };
   };
 
@@ -163,7 +138,6 @@
     ];
   };
 
-
   programs.vim = {
     enable = true;
     plugins = with pkgs.vimPlugins; [
@@ -174,13 +148,12 @@
       relativenumber = true;
       ignorecase = true;
       hidden = true;
-      tabwidth = 2;
-      expandtab = true;
     };
   };
 
   programs.neovim = {
     enable = true;
+    #extraConfig = 
   };
 
   programs.git = {
@@ -210,14 +183,14 @@
         ExtensionSettings = {};
       };
     };
-# TODO: install NUR
-# extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-#   cookie-autodelete
-#   darkreader
-#   bitwarden
-#   ublock-origin
-#   tridactyl
-# ];
+    # TODO: install NUR
+    # extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+    #   cookie-autodelete
+    #   darkreader
+    #   bitwarden
+    #   ublock-origin
+    #   tridactyl
+    # ];
   };
 
   xsession = {
@@ -255,7 +228,7 @@
 
       bars = [{
         fonts.size = 12.0;
-#command = "waybar";
+        #command = "waybar";
         position = "top";
       }];
 
@@ -266,21 +239,21 @@
       };
 
       startup = [
-      { command = "mako"; }
-      { command = "alacritty"; }
-      {
-        command =
-          let
-# lockCmd = "'swaylock -f -i \"\$(${wallpaper}/bin/wallpaper get)\"'";
-          lockCmd = "'swaylock -f'";
-        in
-          ''swayidle -w \
-          timeout 600 ${lockCmd} \
-          timeout 1200 'swaymsg "output * dpms off"' \
-          resume 'swaymsg "output * dpms on"' \
-          before-sleep ${lockCmd}
-        '';
-      }
+        { command = "mako"; }
+        { command = "alacritty"; }
+        {
+          command =
+            let
+              # lockCmd = "'swaylock -f -i \"\$(${wallpaper}/bin/wallpaper get)\"'";
+              lockCmd = "'swaylock -f'";
+            in
+              ''swayidle -w \
+              timeout 600 ${lockCmd} \
+              timeout 1200 'swaymsg "output * dpms off"' \
+              resume 'swaymsg "output * dpms on"' \
+              before-sleep ${lockCmd}
+            '';
+        }
       ];
 
       keybindings = lib.mkOptionDefault {
@@ -330,6 +303,6 @@
     };
   };
 
-# home.file.".config/wall".source = config.lib.file.mkOutOfStoreSymlink ../themes/wall;
+  # home.file.".config/wall".source = config.lib.file.mkOutOfStoreSymlink ../themes/wall;
 
 }
