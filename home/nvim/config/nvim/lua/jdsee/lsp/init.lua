@@ -17,6 +17,7 @@ mason_lspconfig.setup {
     'lemminx',
     'marksman',
     'pyright',
+    'rnix',
     'sumneko_lua',
     'texlab',
     'yamlls',
