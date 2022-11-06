@@ -1,11 +1,16 @@
 { config, lib, pkgs, user, ... }:
 
-{
+let
+  big = text: "<span font='17' rise='-3000'>" + text + "</span>";
+in {
   programs.home-manager.enable = true;
 
-    imports = [
-      ./config/zsh.nix
-    ];
+  imports = [
+    ./alacritty
+    ./nvim
+    ./shell
+    ./tmux
+  ];
 
   home = {
 
@@ -22,15 +27,14 @@
       exa
       file
       fortune
-      fzf
       gnumake
       gnupg
       htop-vim
       httpie
       jq
-      tmuxinator
-      unzip
       ripgrep
+      unzip
+      pamixer
 
       gammastep
       grim
@@ -42,7 +46,6 @@
       swaylock
       wl-clipboard
       wofi
-      waybar
       xwayland
     ];
 
@@ -62,108 +65,6 @@
     };
   };
 
-  programs.alacritty = {
-    enable = true;
-    settings = {
-      env.TERM = "alacritty";
-      window = {
-        decorations = "none";
-        title = "Alacritty";
-      };
-    };
-  };
-
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    enableAutosuggestions = true;
-    zplug = {
-      enable = true;
-      plugins = [
-      { name = "sindresorhus/pure"; }
-      { name = "zsh-users/zsh-autosuggestions"; }
-      { name = "zsh-users/zsh-syntax-highlighting"; }
-      ];
-    };
-    sessionVariables = {
-      GPG_TTY = "$(tty)";
-      MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-      PURE_NODE_ENABLED = 0;
-      PURE_CMD_MAX_EXEC_TIME = 0;
-      FZF_TMUX = 0;
-      FZF_CTRL_T_OPTS = "--preview '(highlight -O ansi -l {} 2> /dev/null || cat {} || tree -C {}) 2> /dev/null | head -200'";
-      FZF_CTRL_R_OPTS = "--preview 'echo {}' --preview-window down:3:hidden:wrap --bind '?:toggle-preview'";
-      FZF_ALT_C_OPTS = "--preview 'tree -C {} | head -200'";
-    };
-    interactiveShellInit = ''
-      eval "$(ssh-agent)" >/dev/null
-      eval "$( pyenv init - --no-rehash )"
-      eval "$( pyenv virtualenv-init - )"
-      eval "$( pip completion --zsh )"
-      '';
-    shellAliases = {
-      vi = "nvim";
-      vind = "nvim -c 'Telescope zoxide list'";
-
-      ls = "exa";
-      ll = "ls -Alh";
-      la = "ls -A";
-      ld = "ls -Ad";
-      tree = "la --tree";
-      trees = "tree --depth 4";
-
-      ".." = "cd ../";
-      "..." = "cd ../../";
-      "...." = "cd ../../../";
-      "....." = "cd ../../../../";
-      "......" = "cd ../../../../../";
-
-      lg = "lazygit";
-      rmgi = "git rm -r --cached . && git add . && git status";
-      conflicts = "grep -lr '<<<<<<<' .";
-
-      _ = "sudo";
-      cat = "bat -p";
-      grep = "grep --color";
-      hg = "history 0 | grep";
-      mycolors = "msgcat --color=test";
-      view = "zathura";
-      diff = "colordiff";
-      clip = "xclip -sel clip";
-
-      "src.zsh" = "source $HOME/.zshrc";
-      "src.aliases" = "source $HOME/.config/zsh/aliases.zsh";
-
-      "set.zsh" = "nvim $HOME/.zshrc";
-      "set.env" = "nvim $HOME/.zshenv";
-      "set.aliases" = "nvim $HOME/.config/zsh/aliases.zsh";
-      "set.functions" = "nvim $HOME/.config/zsh/functions.zsh";
-      "set.completion" = "nvim $HOME/.config/zsh/completion.zsh";
-      "set.nvim" = "nvim $HOME/.config/nvim/init.lua";
-
-      tx = "tmuxinator";
-      mux = "tx me";
-
-      update = "sudo nixos-rebuild switch --flake .#jdsee";
-    };
-    history = {
-      size = 100000;
-      save = 1000000;
-      share = true;
-      expireDuplicatesFirst = true;
-      ignoreSpace = true;
-    };
-  };
-
-  programs.zoxide = {
-    enable = true;
-    enableZshIntegration = true;
-    options = [
-      "--cmd j"
-    ];
-  };
-
-
   programs.vim = {
     enable = true;
     plugins = with pkgs.vimPlugins; [
@@ -174,13 +75,9 @@
       relativenumber = true;
       ignorecase = true;
       hidden = true;
-      tabwidth = 2;
+      tabstop = 2;
       expandtab = true;
     };
-  };
-
-  programs.neovim = {
-    enable = true;
   };
 
   programs.git = {
@@ -193,15 +90,6 @@
     };
   };
 
-  programs.tmux = {
-    enable = true;
-    keyMode = "vi";
-    shortcut = "f";
-    terminal = "screen-256color";
-    clock24 = true;
-    escapeTime = 1;
-  };
-
   programs.firefox = {
     enable = true;
     package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
@@ -210,18 +98,95 @@
         ExtensionSettings = {};
       };
     };
-# TODO: install NUR
-# extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-#   cookie-autodelete
-#   darkreader
-#   bitwarden
-#   ublock-origin
-#   tridactyl
-# ];
+    # TODO: install NUR
+    # extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+    #   cookie-autodelete
+    #   darkreader
+    #   bitwarden
+    #   ublock-origin
+    #   tridactyl
+    # ];
+  };
+
+  programs.zathura = {
+    enable = true;
+    options = {
+      font = "monospace normal 16";
+      incremental-search = true;
+    };
+    # TODO
+    extraConfig = ''
+      include $HOME/setup/hosts/config/zathura/zathura-gruvbox/zathura-gruvbox-dark
+    '';
   };
 
   xsession = {
     enable = true;
+  };
+
+  programs.waybar = {
+    enable = true;
+    # style = ./config/waybar/style.css;
+    settings = [{
+      height = 20;
+      layer = "top";
+
+      modules-left = [
+        "sway/workspaces"
+        "sway/window"
+      ];
+
+      modules-center = [
+      ];
+
+      modules-right = [
+        "network"
+        "battery"
+        "clock"
+      ];
+
+      "sway/workspaces" = {
+        format-icons = {
+          "1" = "";
+          "2" = "";
+          "3" = "";
+          "4" = "";
+          "5" = "";
+          "6" = "";
+          "7" = "";
+          "8" = "";
+          "9" = "ﭮ";
+          "urgent" = "";
+          "focused" = "";
+          "default" = "";
+        };
+      };
+
+      battery = {
+        interval = 60;
+        bat = "BAT1";
+        format = ''{capacity}% ${big "{icon}"}'';
+        format-alt = ''${big " {icon}"}'';
+        format-icons = [ "" "" "" "" "" ];
+        tooltip = false;
+
+        states = {
+          runAndGetTheCharger = 20;
+          prepareToRun = 40;
+          tisGoinLow = 60;
+        };
+      };
+
+      network = {
+        interval = 5;
+        format-wifi = ''${big " 直"}'';
+        format-ethernet = ''${big " "}'';
+        format-disconnected = ''${big ""}'';
+        format-alt = ''{essid}: {ipaddr} | {bandwidthUpBits} ${big ""} {bandwidthDownBits} ${big ""}'';
+        tooltip = false;
+      };
+
+    }];
   };
 
   wayland.windowManager.sway = {
@@ -254,9 +219,7 @@
       };
 
       bars = [{
-        fonts.size = 12.0;
-#command = "waybar";
-        position = "top";
+        command = "waybar";
       }];
 
       output = {
@@ -284,6 +247,8 @@
       ];
 
       keybindings = lib.mkOptionDefault {
+
+        "Mod4+Space" = "exec wofi --show run";
 
         "${modifier}+Shift+r" = "reload";
         "${modifier}+w" = "kill";

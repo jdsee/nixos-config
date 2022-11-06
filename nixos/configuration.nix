@@ -5,6 +5,13 @@
     ./hardware-configuration.nix
   ];
 
+  nixpkgs.overlays = [
+    (import (builtins.fetchTarball {
+      url = https://github.com/nix-community/neovim-nightly-overlay/archive/master.tar.gz;
+      sha256 = "1iih372y505bz8v36xn3hyz2qdfk720pa96g3w0f7fab05jfr1xh";
+    }))
+  ];
+
   boot.loader = {
     systemd-boot = {
       enable = true;
@@ -128,7 +135,6 @@
       VISUAL = "nvim";
     };
     systemPackages = with pkgs; [
-      neovim
       tmux
       git
       curl

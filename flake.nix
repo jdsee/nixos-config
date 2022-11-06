@@ -8,25 +8,36 @@
       url = github:nix-community/home-manager;
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # TODO
-    neovim-nightly-overlay = {
-      url = "github:nix-community/neovim-nightly-overlay";
-    };
-
   };
-
-  outputs = inputs @ { self, nixpkgs, home-manager, neovim-nightly-overlay }:
-    let
-      user = "jdsee";
-    in
-    {
-      nixosConfigurations = (
-        import ./hosts {
-          inherit (nixpkgs) lib;
-          inherit inputs nixpkgs home-manager user;
-        }
-      );
+  outputs = inputs@{ self, nixpkgs, home-manager }: 
+  let
+    user = "jdsee";
+    system = "x86_64-linux";
+    lib = nixpkgs.lib;
+    pkgs = nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
     };
-}
+  in {
+    nixosConfigurations = {
+      "${user}" = lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit user inputs; };
+        modules = [
+          ./nixos/configuration.nix
 
+          home-manager.nixosModules.home-manager {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              extraSpecialArgs = { inherit user; };
+              users.${user} = {
+                imports = [ ./home ];
+              };
+            };
+          }
+        ];
+      };
+    };
+  };
+}
