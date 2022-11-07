@@ -7,6 +7,7 @@ in {
 
   imports = [
     ./alacritty
+    ./git
     ./nvim
     ./shell
     ./tmux
@@ -25,6 +26,7 @@ in {
       bat
       docker
       exa
+      fd
       file
       fortune
       gnumake
@@ -32,9 +34,10 @@ in {
       htop-vim
       httpie
       jq
+      pamixer
+      ranger
       ripgrep
       unzip
-      pamixer
 
       gammastep
       grim
@@ -77,16 +80,6 @@ in {
       hidden = true;
       tabstop = 2;
       expandtab = true;
-    };
-  };
-
-  programs.git = {
-    enable = true;
-    package = pkgs.gitAndTools.gitFull;
-    userName = "jdsee";
-    userEmail = "jdsee@protonmail.com";
-    extraConfig = {
-      core.editor = "vim";
     };
   };
 
