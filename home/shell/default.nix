@@ -37,8 +37,12 @@
       # eval "$( pyenv virtualenv-init - )"
       # eval "$( pip completion --zsh )"
 
+      source $XDG_CONFIG/zsh/popman.sh
+      zle -N popman
+
+      bindkey  popman
       bindkey '^O' autosuggest-accept
-      '';
+    '';
 
     shellAliases = {
       vind = "nvim -c 'Telescope zoxide list'";
@@ -88,5 +92,10 @@
     options = [
       "--cmd j"
     ];
+  };
+
+  xdg.configFile.zsh = {
+    source = ./config/zsh;
+    recursive = true;
   };
 }
