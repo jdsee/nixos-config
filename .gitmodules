@@ -1,0 +1,3 @@
+[submodule "home/wofi/config/dracula-theme"]
+	path = home/wofi/config/dracula-theme
+	url = https://github.com/dracula/wofi

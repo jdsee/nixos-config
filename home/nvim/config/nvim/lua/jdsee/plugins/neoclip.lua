@@ -17,4 +17,5 @@ telescope.load_extension 'neoclip'
 
 -- Keybindings
 vim.keymap.set('n', '<Leader>fy', telescope.extensions.neoclip.default) -- search yank history
+vim.keymap.set('n', '<Leader>fp', telescope.extensions.neoclip.default) -- search yank history
 vim.keymap.set('n', '<Leader>fq', telescope.extensions.macroscope.default) -- search macro history

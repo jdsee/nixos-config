@@ -37,7 +37,7 @@
       # eval "$( pyenv virtualenv-init - )"
       # eval "$( pip completion --zsh )"
 
-      source $XDG_CONFIG/zsh/popman.sh
+      source $XDG_CONFIG_HOME/zsh/popman.sh
       zle -N popman
 
       bindkey  popman
@@ -84,6 +84,10 @@
     enable = true;
     enableZshIntegration = true;
     tmux.enableShellIntegration = false;
+  };
+
+  programs.bat = {
+    enable = true;
   };
 
   programs.zoxide = {

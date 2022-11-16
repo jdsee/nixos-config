@@ -3,14 +3,21 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ../modules/kmonad.nix
   ];
 
-  nixpkgs.overlays = [
-    (import (builtins.fetchTarball {
-      url = https://github.com/nix-community/neovim-nightly-overlay/archive/master.tar.gz;
-      sha256 = "1qkrjzbinhr5lgpkfk270br15gj9iv3rl25kr7b2l9lafmijpc7k";
-    }))
-  ];
+  nixpkgs = {
+    config = {
+      allowBroken = true;
+      allowUnfree = true;
+    };
+    overlays = [
+      (import (builtins.fetchTarball {
+        url = https://github.com/nix-community/neovim-nightly-overlay/archive/master.tar.gz;
+        sha256 = "1aby5aswd8f0965bz761jm3sananl3id1yi2kmlxj2p4ckqlq4f8";
+      }))
+    ];
+  };
 
   boot.loader = {
     systemd-boot = {
@@ -48,130 +55,179 @@
   services = {
     xserver = {
       enable = true;
-      libinput.enable = true; # enable touchpad
+      libinput = {
+        enable = true; # enable touchpad
+        touchpad = {
+          disableWhileTyping = false;
+          naturalScrolling = true;
+        };
+      };
       desktopManager = {
         xterm.enable = false;
       };
+      videoDrivers = [
+        "displaylink"
+        "modsetting"
+      ];
+      displayManager = {
+        sessionCommands = ''
+          ${lib.getBin pkgs.xorg.xrandr}/bin/xrandr --setprovideroutputsource 2 0
+        '';
+      };
       # windowManager.xmonad.enable = true;
       layout = "us,de";
-      xkbOptions = "caps:ctrl_modifier";
-      #   "eurosign:e"
-      #   "shift:both_capslock"
-      # };
+      xkbOptions = "caps:ctrl_modifier,shift:both_capslock";
     };
 
-    blueman.enable = true;
+    # greetd = {
+    #   enable = true;
+    #   settings = rec {
+    #     initial_session = {
+    #       command = "${pkgs.sway}/bin/sway";
+    #       user = "${user}";
+    #     };
+    #     default_session = initial_session;
+    #   };
+    # };
 
-    openssh.enable = true;
-  };
+      kmonad = {
+        # TODO
+        enable = false;
+        # configfiles = [ ../home/kmonad/config.kbd ];
+      };
 
-  fonts.fonts = with pkgs; [
-    font-awesome
-    (nerdfonts.override {
-      fonts = [
-        "Hack"
-      ];
-    })
-  ];
-
-  nix = {
-    settings.auto-optimise-store = true;
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 7d";
+      blueman.enable = true;
+      openssh.enable = true;
     };
-    package = pkgs.nixFlakes;
-    registry.nixpkgs.flake = inputs.nixpkgs;
-    extraOptions = ''
-      experimental-features = nix-command flakes
-      warn-dirty = false
-    '';
-  };
 
-  sound = {
-    enable = true;
-    mediaKeys = {
-      enable = true;
+    systemd.services = {
+      keyd = {
+        description = "key remapping daemon";
+        requires = [ "local-fs.target" ];
+        after = [ "local-fs.target" ];
+        wantedBy = [ "sysinit.target" ];
+        unitConfig = {
+          Type = "simple";
+        };
+        serviceConfig = {
+          ExecStart = "/usr/bin/keyd";
+        };
+      };
     };
-  };
 
-  hardware = {
-    pulseaudio.enable = true;
-    opengl = {
-      enable = true;
-      driSupport = true;
+    environment.etc = {
+      "keyd/default.conf".source = ../home/keyd/config/keyd/default.conf;
     };
-  };
 
-  xdg = {
-    portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal-wlr
-        xdg-desktop-portal-gtk
-      ];
-    };
-  };
-
-  users.users.${user} = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "video"
-      "audio"
-      "camera"
-      "networkManager"
-    ];
-    shell = pkgs.zsh;
-    packages = with pkgs; [
-    ];
-  };
-
-  environment = {
-    variables = {
-      TERMINAL = "alacritty";
-      EDITOR = "nvim";
-      VISUAL = "nvim";
-    };
-    systemPackages = with pkgs; [
-      tmux
-      git
-      curl
-      wget
-
-      ((vim_configurable.override {  }).customize {
-       name = "vim";
-       vimrcConfig = {
-         packages.myplugins = with pkgs.vimPlugins; {
-           start = [ vim-nix vim-lastplace ];
-           opt = [];
-         };
-         customRC = ''
-           set nu
-           set relativenu
-           set incsearch
-           set nocompatible
-           backspace=indent,eol,start
-           syntax on
-         '';
-       };
+    fonts.fonts = with pkgs; [
+      font-awesome
+      (nerdfonts.override {
+        fonts = [
+          "Hack"
+        ];
       })
     ];
-  };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+    nix = {
+      settings.auto-optimise-store = true;
+      gc = {
+        automatic = true;
+        dates = "weekly";
+        options = "--delete-older-than 7d";
+      };
+      package = pkgs.nixFlakes;
+      registry.nixpkgs.flake = inputs.nixpkgs;
+      extraOptions = ''
+        experimental-features = nix-command flakes
+        warn-dirty = false
+      '';
+    };
 
-  programs = {
-    light.enable = true;
-    sway.enable = true;
-  };
+    sound = {
+      enable = true;
+      mediaKeys = {
+        enable = true;
+      };
+    };
 
-  system.stateVersion = "22.05";
-}
+    hardware = {
+      pulseaudio.enable = true;
+      opengl = {
+        enable = true;
+        driSupport = true;
+      };
+    };
+
+    xdg = {
+      portal = {
+        enable = true;
+        extraPortals = with pkgs; [
+          xdg-desktop-portal-wlr
+          xdg-desktop-portal-gtk
+        ];
+      };
+    };
+
+    users.users.${user} = {
+      isNormalUser = true;
+      extraGroups = [
+        "wheel"
+        "video"
+        "audio"
+        "camera"
+        "networkManager"
+        "input"
+        "uinput"
+      ];
+      shell = pkgs.zsh;
+      packages = with pkgs; [
+      ];
+    };
+
+    environment = {
+      variables = {
+        TERMINAL = "alacritty";
+        EDITOR = "nvim";
+        VISUAL = "nvim";
+      };
+      systemPackages = with pkgs; [
+        tmux
+        git
+        curl
+        wget
+
+        ((vim_configurable.override { }).customize {
+          name = "vim";
+          vimrcConfig = {
+            packages.myplugins = with pkgs.vimPlugins; {
+              start = [ vim-nix vim-lastplace ];
+              opt = [ ];
+            };
+            customRC = ''
+              set nu
+              set relativenu
+              set incsearch
+              set nocompatible
+              backspace=indent,eol,start
+              syntax on
+            '';
+          };
+        })
+      ];
+    };
+
+    # Some programs need SUID wrappers, can be configured further or are
+    # started in user sessions.
+    # programs.mtr.enable = true;
+    # programs.gnupg.agent = {
+    #   enable = true;
+    #   enableSSHSupport = true;
+    # };
+
+    programs = {
+      light.enable = true;
+      sway.enable = true;
+    };
+
+    system.stateVersion = "22.05";
+  }
