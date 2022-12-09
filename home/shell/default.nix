@@ -37,7 +37,7 @@
       # eval "$( pyenv virtualenv-init - )"
       # eval "$( pip completion --zsh )"
 
-      source $XDG_CONFIG_HOME/zsh/popman.sh
+      source ~/.config/zsh/popman.sh
       zle -N popman
 
       bindkey  popman

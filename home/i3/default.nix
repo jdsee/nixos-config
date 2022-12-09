@@ -1,5 +1,27 @@
 { config, lib, pkgs, user, ... }:
 {
+
+  home.packages = with pkgs; [
+    rofi-rbw
+    rbw
+  ];
+
+  programs.rbw = {
+    settings = {
+      pinentry = "gtk2";
+    };
+  };
+
+  gtk = {
+    enable = true;
+    theme.name = "adw-gtk3";
+  };
+
+  programs.rofi = {
+    enable = true;
+    theme = "purple";
+  };
+
   xsession.windowManager.i3 = {
     enable = true;
     config = rec {
@@ -41,7 +63,8 @@
           right = "l";
         in
         {
-          "${mod}+return" = "exec ${terminal}";
+          "${mod}+enter" = "exec ${terminal}";
+          "${mod}+t" = "exec ${terminal}";
           "${mod}+shift+q" = "kill";
           "${mod}+d" = "exec ${menu}";
 
@@ -139,4 +162,25 @@
         };
     };
   };
+
+  services = {
+    betterlockscreen = {
+      enable = true;
+    };
+    screen-locker = {
+      enable = true;
+    };
+    picom = {
+      enable = true;
+      vSync = true;
+      backend = "glx";
+    };
+    # xscreenserver = {
+    #   enable = true;
+    #   settings = {
+    #     lock = true;
+    #   };
+    # };
+  };
+
 }
